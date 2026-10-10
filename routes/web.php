@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TicketCommentController;
 use App\Http\Controllers\TicketController;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +24,25 @@ Route::middleware('auth')->group(function () {
         ->middleware('role:user,admin')
         ->name('tickets.store');
     Route::get('/tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
+
+    // działania na zgłoszeniu
+    Route::post('/tickets/{ticket}/take', [TicketController::class, 'take'])
+        ->middleware('role:agent')
+        ->name('tickets.take');
+    Route::post('/tickets/{ticket}/assign', [TicketController::class, 'assign'])
+        ->middleware('role:admin')
+        ->name('tickets.assign');
+    Route::patch('/tickets/{ticket}/status', [TicketController::class, 'updateStatus'])
+        ->name('tickets.status');
+    Route::patch('/tickets/{ticket}/details', [TicketController::class, 'updateDetails'])
+        ->middleware('role:agent,admin')
+        ->name('tickets.details');
+
+    // komentarze i załączniki
+    Route::post('/tickets/{ticket}/comments', [TicketCommentController::class, 'store'])
+        ->name('tickets.comments.store');
+    Route::get('/attachments/{attachment}', [AttachmentController::class, 'download'])
+        ->name('attachments.download');
 
     // profil (Breeze)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

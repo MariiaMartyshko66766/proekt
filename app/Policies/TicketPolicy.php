@@ -24,9 +24,10 @@ class TicketPolicy
         return in_array($user->role, [User::ROLE_USER, User::ROLE_ADMIN], true);
     }
 
+    // do zamkniętego zgłoszenia nie można dodawać komentarzy
     public function comment(User $user, Ticket $ticket): bool
     {
-        return $this->view($user, $ticket);
+        return $this->view($user, $ticket) && $ticket->status !== Ticket::STATUS_CLOSED;
     }
 
     // technik przejmuje wolne zgłoszenie
