@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\AttachmentController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TicketCommentController;
 use App\Http\Controllers\TicketController;
@@ -10,10 +13,8 @@ Route::get('/', function () {
     return redirect()->route('dashboard');
 });
 
-Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+Route::middleware(['auth', 'active'])->group(function () {
+    Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
     // zgłoszenia
     Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
@@ -43,6 +44,17 @@ Route::middleware('auth')->group(function () {
         ->name('tickets.comments.store');
     Route::get('/attachments/{attachment}', [AttachmentController::class, 'download'])
         ->name('attachments.download');
+
+    // administracja
+    Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
+        Route::patch('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
+
+        Route::get('/categories', [AdminCategoryController::class, 'index'])->name('categories.index');
+        Route::post('/categories', [AdminCategoryController::class, 'store'])->name('categories.store');
+        Route::patch('/categories/{category}', [AdminCategoryController::class, 'update'])->name('categories.update');
+        Route::delete('/categories/{category}', [AdminCategoryController::class, 'destroy'])->name('categories.destroy');
+    });
 
     // profil (Breeze)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

@@ -6,6 +6,10 @@ use App\Models\Category;
 use App\Models\Ticket;
 use App\Models\TicketComment;
 use App\Models\User;
+use App\Notifications\TicketAssigned;
+use App\Notifications\TicketCommentAdded;
+use App\Notifications\TicketStatusChanged;
+use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -89,11 +93,17 @@ class TicketService
 
             $ticket->agent_id = $agent->id;
             $ticket->save();
+            $ticket->setRelation('agent', $agent);
 
             $this->log($ticket, $actor, 'agent', $oldName, $agent->name);
 
             if ($ticket->status === Ticket::STATUS_NEW) {
                 $this->applyStatus($ticket, $actor, Ticket::STATUS_IN_PROGRESS);
+            }
+
+            // technik dostaje powiadomienie, gdy przypisał go ktoś inny
+            if ((int) $agent->id !== (int) $actor->id) {
+                $this->notify($agent, new TicketAssigned($ticket));
             }
         });
     }
@@ -132,10 +142,16 @@ class TicketService
                 'user_id' => $user->id,
                 'body' => $body,
             ]);
+            $comment->setRelation('user', $user);
 
             if ($ticket->status === Ticket::STATUS_WAITING
                 && (int) $ticket->user_id === (int) $user->id) {
                 $this->applyStatus($ticket, $user, Ticket::STATUS_IN_PROGRESS);
+            }
+
+            // autor zgłoszenia dostaje powiadomienie o cudzym komentarzu
+            if ((int) $ticket->user_id !== (int) $user->id) {
+                $this->notify($ticket->author, new TicketCommentAdded($ticket, $comment));
             }
 
             return $comment;
@@ -157,6 +173,12 @@ class TicketService
         $ticket->save();
 
         $this->log($ticket, $user, 'status', $from, $to);
+
+        // autor zgłoszenia dostaje powiadomienie o zmianie statusu
+        // (nie wysyłamy go, jeśli zmiany dokonał sam autor)
+        if ((int) $ticket->user_id !== (int) $user->id) {
+            $this->notify($ticket->author, new TicketStatusChanged($ticket, $from, $to));
+        }
     }
 
     private function log(Ticket $ticket, User $user, string $field, ?string $old, ?string $new): void
@@ -167,5 +189,15 @@ class TicketService
             'old_value' => $old,
             'new_value' => $new,
         ]);
+    }
+
+    // błąd poczty nie może przerwać pracy ze zgłoszeniem
+    private function notify(User $recipient, Notification $notification): void
+    {
+        try {
+            $recipient->notify($notification);
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 }
