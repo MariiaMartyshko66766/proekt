@@ -1,0 +1,17 @@
+{
+    "Showing": "Wyświetlanie",
+    "to": "do",
+    "of": "z",
+    "results": "wyników",
+    "Pagination Navigation": "Nawigacja po stronach",
+    "Go to page :page": "Przejdź do strony :page",
+    "Previous": "Poprzednia",
+    "Next": "Następna",
+    "Reset Password Notification": "Resetowanie hasła",
+    "Hello!": "Dzień dobry!",
+    "Regards": "Pozdrawiamy",
+    "You are receiving this email because we received a password reset request for your account.": "Otrzymujesz tę wiadomość, ponieważ otrzymaliśmy prośbę o zresetowanie hasła do Twojego konta.",
+    "Reset Password": "Zresetuj hasło",
+    "This password reset link will expire in :count minutes.": "Ten link do resetowania hasła wygaśnie za :count minut.",
+    "If you did not request a password reset, no further action is required.": "Jeśli to nie Ty prosiłeś o zresetowanie hasła, nie musisz nic robić."
+}
