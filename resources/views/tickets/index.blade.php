@@ -1,93 +1,100 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">Lista zgłoszeń</h2>
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="h4 mb-0">Lista zgłoszeń</h1>
+            @can('create', App\Models\Ticket::class)
+                <a href="{{ route('tickets.create') }}" class="btn btn-primary">Nowe zgłoszenie</a>
+            @endcan
+        </div>
     </x-slot>
 
-    <div class="py-8">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-4">
-
-            @if (session('success'))
-                <div class="p-3 bg-green-100 text-green-800 rounded">{{ session('success') }}</div>
-            @endif
-
-            @can('create', App\Models\Ticket::class)
-                <a href="{{ route('tickets.create') }}" class="inline-block px-4 py-2 bg-gray-800 text-white rounded">Nowe zgłoszenie</a>
-            @endcan
-
-            <form method="GET" action="{{ route('tickets.index') }}" class="bg-white p-4 rounded shadow flex flex-wrap gap-3 items-end">
-                <div>
-                    <label class="block text-sm">Szukaj w temacie</label>
-                    <input type="text" name="q" value="{{ request('q') }}" class="border-gray-300 rounded">
+    <form method="GET" action="{{ route('tickets.index') }}" class="card shadow-sm mb-3">
+        <div class="card-body">
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-md-3">
+                    <label for="q" class="form-label small mb-1">Szukaj w temacie</label>
+                    <input id="q" type="text" name="q" value="{{ request('q') }}" class="form-control">
                 </div>
-                <div>
-                    <label class="block text-sm">Status</label>
-                    <select name="status" class="border-gray-300 rounded">
+                <div class="col-6 col-md-2">
+                    <label for="status" class="form-label small mb-1">Status</label>
+                    <select id="status" name="status" class="form-select">
                         <option value="">Wszystkie</option>
                         @foreach ($statuses as $s)
                             <option value="{{ $s }}" @selected(request('status') === $s)>{{ $s }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div>
-                    <label class="block text-sm">Priorytet</label>
-                    <select name="priority" class="border-gray-300 rounded">
+                <div class="col-6 col-md-2">
+                    <label for="priority" class="form-label small mb-1">Priorytet</label>
+                    <select id="priority" name="priority" class="form-select">
                         <option value="">Wszystkie</option>
                         @foreach ($priorities as $p)
                             <option value="{{ $p }}" @selected(request('priority') === $p)>{{ $p }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div>
-                    <label class="block text-sm">Kategoria</label>
-                    <select name="category_id" class="border-gray-300 rounded">
+                <div class="col-12 col-md-3">
+                    <label for="category_id" class="form-label small mb-1">Kategoria</label>
+                    <select id="category_id" name="category_id" class="form-select">
                         <option value="">Wszystkie</option>
                         @foreach ($categories as $c)
                             <option value="{{ $c->id }}" @selected((string) request('category_id') === (string) $c->id)>{{ $c->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded">Filtruj</button>
-                <a href="{{ route('tickets.index') }}" class="px-4 py-2 bg-gray-200 rounded">Wyczyść</a>
-            </form>
-
-            <div class="bg-white rounded shadow overflow-x-auto">
-                <table class="min-w-full text-sm">
-                    <thead class="bg-gray-100 text-left">
-                        <tr>
-                            <th class="p-2">Nr</th>
-                            <th class="p-2">Temat</th>
-                            <th class="p-2">Kategoria</th>
-                            <th class="p-2">Priorytet</th>
-                            <th class="p-2">Status</th>
-                            <th class="p-2">Autor</th>
-                            <th class="p-2">Technik</th>
-                            <th class="p-2">Data</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($tickets as $ticket)
-                            <tr class="border-t">
-                                <td class="p-2">#{{ $ticket->id }}</td>
-                                <td class="p-2">
-                                    <a href="{{ route('tickets.show', $ticket) }}" class="text-indigo-600 underline">{{ $ticket->title }}</a>
-                                </td>
-                                <td class="p-2">{{ $ticket->category->name }}</td>
-                                <td class="p-2">{{ $ticket->priority }}</td>
-                                <td class="p-2">{{ $ticket->status }}</td>
-                                <td class="p-2">{{ $ticket->author->name }}</td>
-                                <td class="p-2">{{ $ticket->agent?->name ?? '—' }}</td>
-                                <td class="p-2">{{ $ticket->created_at->format('d.m.Y H:i') }}</td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="8" class="p-4 text-center text-gray-500">Brak zgłoszeń.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                <div class="col-12 col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1">Filtruj</button>
+                    <a href="{{ route('tickets.index') }}" class="btn btn-outline-secondary">Wyczyść</a>
+                </div>
             </div>
+        </div>
+    </form>
 
-            <div>{{ $tickets->links() }}</div>
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Nr</th>
+                        <th>Temat</th>
+                        <th>Kategoria</th>
+                        <th>Priorytet</th>
+                        <th>Status</th>
+                        <th>Autor</th>
+                        <th>Technik</th>
+                        <th>Data</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($tickets as $ticket)
+                        <tr>
+                            <td>#{{ $ticket->id }}</td>
+                            <td>
+                                <a href="{{ route('tickets.show', $ticket) }}" class="fw-semibold text-decoration-none">{{ $ticket->title }}</a>
+                            </td>
+                            <td>{{ $ticket->category->name }}</td>
+                            <td><x-priority-badge :priority="$ticket->priority" /></td>
+                            <td><x-status-badge :status="$ticket->status" /></td>
+                            <td>{{ $ticket->author->name }}</td>
+                            <td>{{ $ticket->agent?->name ?? '—' }}</td>
+                            <td class="text-nowrap">{{ $ticket->created_at->format('d.m.Y H:i') }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">Brak zgłoszeń spełniających kryteria.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
+
+    @if ($tickets->total())
+        <div class="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2">
+            <div class="text-muted small">
+                Wyświetlono {{ $tickets->firstItem() }}–{{ $tickets->lastItem() }} z {{ $tickets->total() }}
+            </div>
+            <div>{{ $tickets->links() }}</div>
+        </div>
+    @endif
 </x-app-layout>
